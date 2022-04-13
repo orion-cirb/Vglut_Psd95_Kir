@@ -56,7 +56,9 @@ public class Tools {
     public String Vglut_thMethod = "Moments";
     public String Pds95_thMethod = "Moments";
     public String Kir_thMethod = "Moments";
-    public double sphereDistSynap = 10;
+    public double sphereDistSynap = 2;
+    // border to crop
+    public double borderCrop = 0.2;
     public Calibration cal;
         
     public final ImageIcon icon = new ImageIcon(this.getClass().getResource("/Orion_icon.png"));
@@ -103,7 +105,7 @@ public class Tools {
         gd.addMessage("--- Dots filter size ---", Font.getFont(Font.MONOSPACED), Color.blue);
         gd.addNumericField("Min. volume size (µm3) : ", minDotVol, 3);
         gd.addNumericField("Max. volume size (µm3) : ", maxDotVol, 3);
-        gd.addMessage("StarDist model", Font.getFont("Monospace"), Color.blue);
+        gd.addNumericField("Border to crop (µm) : ", borderCrop);
         gd.addMessage("--- Threshold methods ---", Font.getFont(Font.MONOSPACED), Color.blue);
         String [] thMethods = new AutoThresholder().getMethods();
         gd.addChoice("Threshold method for Vglut : ", thMethods, Vglut_thMethod); 
@@ -118,6 +120,7 @@ public class Tools {
             chChoices[n] = gd.getNextChoice();
         minDotVol = gd.getNextNumber();
         maxDotVol = gd.getNextNumber();
+        borderCrop = gd.getNextNumber();
         Vglut_thMethod = gd.getNextChoice();
         Pds95_thMethod = gd.getNextChoice();
         Kir_thMethod = gd.getNextChoice();
@@ -395,8 +398,8 @@ public class Tools {
     public void saveImgObjects(Objects3DIntPopulation pop1, Objects3DIntPopulation pop2, Objects3DIntPopulation pop3, ArrayList<Synapse_Vglut_Psd95> synapses,
             String imageName, ImagePlus img, String outDir) {
         //create image objects population
-        ImageHandler imgObj1 = pop1.drawImage();
-        ImageHandler imgObj2 = pop2.drawImage();
+        ImageHandler imgObj1 = pop2.drawImage();
+        ImageHandler imgObj2 = pop1.drawImage();
         ImageHandler imgObj3 = pop3.drawImage();
         ImagePlus imgObj4 = IJ.createImage("Synapse",img.getWidth(), img.getHeight(),img.getNSlices(), 8);
         if (!synapses.isEmpty()) {
@@ -406,6 +409,7 @@ public class Tools {
         ImagePlus[] imgColors = {imgObj1.getImagePlus(), imgObj2.getImagePlus(), imgObj3.getImagePlus(), null, null, null, imgObj4};
         ImagePlus imgObjects = new RGBStackMerge().mergeHyperstacks(imgColors, false);
         imgObjects.setCalibration(img.getCalibration());
+        IJ.run(imgObjects, "Enhance Contrast", "saturated=0.35");
         FileSaver ImgObjectsFile = new FileSaver(imgObjects);
         ImgObjectsFile.saveAsTiff(outDir + imageName + "_Objects.tif"); 
         imgObj1.closeImagePlus();

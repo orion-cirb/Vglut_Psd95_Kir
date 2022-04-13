@@ -8,7 +8,7 @@
 import Vglut_Psd95_Kir_Tools.Synapse_Vglut_Psd95;
 import Vglut_Psd95_Kir_Tools.Tools;
 import ij.*;
-import ij.measure.Calibration;
+import ij.gui.Roi;
 import ij.plugin.PlugIn;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,7 +30,6 @@ public class Vglut_Psd95_Kir implements PlugIn {
     
     private String imageDir = "";
     public String outDirResults = "";
-    private Calibration cal = new Calibration();
     private boolean canceled = false;
     public String file_ext = "hgsb";
     public BufferedWriter results_analyze;
@@ -86,12 +85,20 @@ public class Vglut_Psd95_Kir implements PlugIn {
             for (String f : imageFile) {
                 String rootName = FilenameUtils.getBaseName(f);
                 System.out.println(imageDir+rootName+"_"+channels[0]+".tif");
-                // open Vglut Channel
+                // open Vglut Channel crop border
                 System.out.println("--- Opening Vglut channel  ...");
                 ImagePlus imgVglut = IJ.openImage(imageDir+rootName+"_"+channels[0]+".tif");
                 tools.cal = imgVglut.getCalibration();
+                // Crop border
+                int cropWidth = (int)(imgVglut.getWidth() - 2*tools.borderCrop*tools.cal.pixelWidth);
+                int cropHeight = (int)(imgVglut.getHeight() - 2*tools.borderCrop*tools.cal.pixelHeight);
+                int cropXY = (int)(tools.borderCrop*tools.cal.pixelHeight);
+                Roi roiCrop = new Roi(cropXY, cropXY, cropWidth, cropHeight);
+                imgVglut.setRoi(roiCrop);
+                ImagePlus imgVglutCrop = imgVglut.crop();
+                tools.flush_close(imgVglut);
                 // Find all Vglut dots
-                Objects3DIntPopulation VglutPop = tools.findDots(imgVglut, tools.Vglut_thMethod);
+                Objects3DIntPopulation VglutPop = tools.findDots(imgVglutCrop, tools.Vglut_thMethod);
                 // Compute parameters
                 int VglutDots = VglutPop.getNbObjects();
                 System.out.println(VglutDots +" Vglut found");
@@ -99,10 +106,13 @@ public class Vglut_Psd95_Kir implements PlugIn {
                 // open Psd95 Channel
                 System.out.println("--- Opening Psd95 channel  ...");
                 ImagePlus imgPsd95 = IJ.openImage(imageDir+rootName+"_"+channels[1]+".tif");
-                Objects3DIntPopulation Psd95Pop = tools.findDots(imgPsd95, tools.Pds95_thMethod);
+                imgPsd95.setRoi(roiCrop);
+                ImagePlus imgPsd95Crop = imgPsd95.crop();
+                tools.flush_close(imgPsd95);
+                Objects3DIntPopulation Psd95Pop = tools.findDots(imgPsd95Crop, tools.Pds95_thMethod);
                 int Psd95Dots = Psd95Pop.getNbObjects();
                 System.out.println(Psd95Dots +" Psd95 found");
-                tools.flush_close(imgPsd95);
+                tools.flush_close(imgPsd95Crop);
                 
                 // Find synapses Vglut-Psd95
                 Objects3DIntPopulation synapses = tools.findSynapses(VglutPop, Psd95Pop);
@@ -110,18 +120,20 @@ public class Vglut_Psd95_Kir implements PlugIn {
                 // open Kir Channel
                 System.out.println("--- Opening Kir channel  ...");
                 ImagePlus imgKir = IJ.openImage(imageDir+rootName+"_"+channels[2]+".tif");
-                Objects3DIntPopulation KirPop = tools.findDots(imgKir, tools.Kir_thMethod);
+                imgKir.setRoi(roiCrop);
+                ImagePlus imgKirCrop = imgKir.crop();
+                tools.flush_close(imgKir);
+                Objects3DIntPopulation KirPop = tools.findDots(imgKirCrop, tools.Kir_thMethod);
                 int KirDots = KirPop.getNbObjects();
                 System.out.println(KirDots +" Kir found");
-
-                // Find Kir arround sphereDistSynapse
-                ArrayList<Synapse_Vglut_Psd95> kirSynapses = tools.findKirSynapses(KirPop, synapses, imgKir);
-                tools.flush_close(imgKir);
-      
                 
+                
+                // Find Kir arround sphereDistSynapse
+                ArrayList<Synapse_Vglut_Psd95> kirSynapses = tools.findKirSynapses(KirPop, synapses, imgKirCrop);
+                tools.flush_close(imgKirCrop);
                 // Save image objects
-                tools.saveImgObjects(VglutPop, Psd95Pop, KirPop, kirSynapses, rootName+"_Objects.tif", imgVglut, outDirResults);
-                tools.flush_close(imgVglut);
+                tools.saveImgObjects(VglutPop, Psd95Pop, KirPop, kirSynapses, rootName+"_Objects.tif", imgVglutCrop, outDirResults);
+                tools.flush_close(imgVglutCrop);
                 
                 // write data
                 tools.writeData(kirSynapses, VglutDots, Psd95Dots, KirDots, rootName, results_analyze);
