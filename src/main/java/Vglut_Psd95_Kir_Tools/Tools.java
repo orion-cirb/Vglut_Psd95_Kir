@@ -7,6 +7,7 @@ import ij.ImagePlus;
 import ij.gui.WaitForUserDialog;
 import ij.io.FileSaver;
 import ij.measure.Calibration;
+import ij.measure.ResultsTable;
 import ij.plugin.RGBStackMerge;
 import ij.process.AutoThresholder;
 import ij.process.ImageProcessor;
@@ -298,7 +299,8 @@ public class Tools {
         IJ.showStatus("Finding kir dots at "+sphereDistSynap+ " of synapses ...");
         //Objects3DIntPopulation kirSynapPop = new Objects3DIntPopulation();
         ImageHandler imh = ImageHandler.wrap(imgKir);
-        MeasurePopulationDistance distances = new MeasurePopulationDistance(synapPop, kirPop, sphereDistSynap);
+        MeasurePopulationDistance distances = new MeasurePopulationDistance(synapPop, kirPop, sphereDistSynap, MeasurePopulationDistance.DIST_BB_UNIT);
+        ResultsTable resultsTableDist = distances.getResultsTableOnlyColoc();
         synapPop.getObjects3DInt().stream().forEach(obj1 -> {
             int nbKir = 0;
             DescriptiveStatistics kirDistStats = new DescriptiveStatistics();
@@ -418,9 +420,14 @@ public class Tools {
      *  
     */
     public void writeData(ArrayList<Synapse_Vglut_Psd95> synapses, int vglut, int psd95, int kir, String Name, BufferedWriter results) throws IOException {
+        
         synapses.forEach(synapse -> {
             try {
-                results.write(Name+"\t"+vglut+"\t"+psd95+"\t"+kir+"\t"+synapse.getIndex()+"\t"+synapse.getNbKir()+"\t"+synapse.getAreaKir()+"\t"+synapse.getMeanIntKir()+
+                if (synapse.getIndex() == 0)
+                    results.write(Name+"\t"+vglut+"\t"+psd95+"\t"+kir+"\t"+synapse.getIndex()+"\t"+synapse.getNbKir()+"\t"+synapse.getAreaKir()+"\t"+synapse.getMeanIntKir()+
+                        "\t"+synapse.getSdIntKir()+"\t"+synapse.getMeanDistKir()+"\t"+synapse.getSdDistKir()+"\n");
+                else
+                    results.write("\t"+"\t"+"\t"+"\t"+synapse.getIndex()+"\t"+synapse.getNbKir()+"\t"+synapse.getAreaKir()+"\t"+synapse.getMeanIntKir()+
                         "\t"+synapse.getSdIntKir()+"\t"+synapse.getMeanDistKir()+"\t"+synapse.getSdDistKir()+"\n");
             } catch (IOException ex) {
                 Logger.getLogger(Tools.class.getName()).log(Level.SEVERE, null, ex);
