@@ -9,7 +9,9 @@ import Vglut_Psd95_Kir_Tools.Synapse_Vglut_Psd95;
 import Vglut_Psd95_Kir_Tools.Tools;
 import ij.*;
 import ij.gui.Roi;
+import ij.gui.WaitForUserDialog;
 import ij.plugin.PlugIn;
+import ij3d.behaviors.WaitForNextFrameBehavior;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -85,15 +87,15 @@ public class Vglut_Psd95_Kir implements PlugIn {
             for (String f : imageFile) {
                 String rootName = FilenameUtils.getBaseName(f);
                 System.out.println(imageDir+rootName+"_"+channels[0]+".tif");
+                
                 // open Vglut Channel crop border
                 System.out.println("--- Opening Vglut channel  ...");
                 ImagePlus imgVglut = IJ.openImage(imageDir+rootName+"_"+channels[0]+".tif");
                 tools.cal = imgVglut.getCalibration();
                 // Crop border
-                int cropWidth = (int)(imgVglut.getWidth() - 2*tools.borderCrop*tools.cal.pixelWidth);
-                int cropHeight = (int)(imgVglut.getHeight() - 2*tools.borderCrop*tools.cal.pixelHeight);
-                int cropXY = (int)(tools.borderCrop*tools.cal.pixelHeight);
-                Roi roiCrop = new Roi(cropXY, cropXY, cropWidth, cropHeight);
+                int cropW = (int)(imgVglut.getWidth() - 2*tools.borderCrop/tools.cal.pixelWidth);
+                int cropXY = (int)((imgVglut.getWidth() - cropW)/2);
+                Roi roiCrop = new Roi(cropXY, cropXY, cropW, cropW);
                 imgVglut.setRoi(roiCrop);
                 ImagePlus imgVglutCrop = imgVglut.crop();
                 tools.flush_close(imgVglut);
