@@ -9,9 +9,7 @@ import Vglut_Psd95_Kir_Tools.Synapse_Vglut_Psd95;
 import Vglut_Psd95_Kir_Tools.Tools;
 import ij.*;
 import ij.gui.Roi;
-import ij.gui.WaitForUserDialog;
 import ij.plugin.PlugIn;
-import ij3d.behaviors.WaitForNextFrameBehavior;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -44,10 +42,6 @@ public class Vglut_Psd95_Kir implements PlugIn {
     @Override
     public void run(String arg) {
         try {
-            if (canceled) {
-                IJ.showMessage(" Pluging canceled");
-                return;
-            }   
             imageDir = IJ.getDirectory("Choose directory containing image files...");
             if (imageDir == null) {
                 return;
@@ -71,7 +65,7 @@ public class Vglut_Psd95_Kir implements PlugIn {
             // Channels dialog
             
             String[] channels = tools.dialog(chsName);
-            if ( channels == null) {
+            if ( channels == null || tools.canceled) {
                 IJ.showStatus("Plugin cancelled");
                 return;
             }
