@@ -84,7 +84,7 @@ public class Vglut_Psd95_Kir implements PlugIn {
                 
                 // open Vglut Channel crop border
                 System.out.println("--- Opening Vglut channel  ...");
-                ImagePlus imgVglut = IJ.openImage(imageDir+rootName+"_"+channels[0]+".tif");
+                ImagePlus imgVglut = IJ.openImage(imageDir+rootName+"_"+channels[2]+".tif");
                 tools.cal = imgVglut.getCalibration();
                 // Crop border
                 int cropW = (int)(imgVglut.getWidth() - 2*tools.borderCrop/tools.cal.pixelWidth);
@@ -115,7 +115,7 @@ public class Vglut_Psd95_Kir implements PlugIn {
                 
                 // open Kir Channel
                 System.out.println("--- Opening Kir channel  ...");
-                ImagePlus imgKir = IJ.openImage(imageDir+rootName+"_"+channels[2]+".tif");
+                ImagePlus imgKir = IJ.openImage(imageDir+rootName+"_"+channels[0]+".tif");
                 imgKir.setRoi(roiCrop);
                 ImagePlus imgKirCrop = imgKir.crop();
                 tools.flush_close(imgKir);

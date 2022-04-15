@@ -50,8 +50,8 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  */
 public class Tools {
 
-    public boolean canceled = true;
-    public double minDotVol = 0.21;
+    public boolean canceled = false;
+    public double minDotVol = 0.003;
     public double maxDotVol = Double.MAX_VALUE;
     public String Vglut_thMethod = "Moments";
     public String Pds95_thMethod = "Moments";
@@ -78,7 +78,7 @@ public class Tools {
         // filter size
         ClearCLBuffer labelsSizeFilter = clij2.create(imgCL.getWidth(), imgCL.getHeight(), imgCL.getDepth());
         clij2.release(imgCL);
-        clij2.excludeLabelsOutsideSizeRange(labels, labelsSizeFilter, minDotVol, maxDotVol);
+        clij2.excludeLabelsOutsideSizeRange(labels, labelsSizeFilter, minDotVol/(cal.pixelWidth*cal.pixelWidth), maxDotVol/(cal.pixelWidth*cal.pixelWidth));
         clij2.release(labels);
         ImagePlus img = clij2.pull(labelsSizeFilter);
         clij2.release(labelsSizeFilter);
@@ -92,7 +92,7 @@ public class Tools {
     
     
     public String[] dialog(String[] chs) {
-        String[] channelNames = {"Vglut", "PSD95", "Kir4.1"};
+        String[] channelNames = {"Kir4.1", "PSD95", "Vglut"};
         GenericDialogPlus gd = new GenericDialogPlus("Parameters");
         gd.setInsets​(0, 100, 0);
         gd.addImage(icon);
@@ -302,8 +302,10 @@ public class Tools {
         IJ.showStatus("Finding kir dots at "+sphereDistSynap+ " of synapses ...");
         //Objects3DIntPopulation kirSynapPop = new Objects3DIntPopulation();
         ImageHandler imh = ImageHandler.wrap(imgKir);
-        MeasurePopulationDistance distances = new MeasurePopulationDistance(synapPop, kirPop, sphereDistSynap, MeasurePopulationDistance.DIST_BB_UNIT);
-        ResultsTable resultsTableDist = distances.getResultsTableOnlyColoc();
+        MeasurePopulationDistance distances = new MeasurePopulationDistance(synapPop, kirPop, sphereDistSynap, MeasurePopulationDistance.DIST_CC_UNIT);
+        ResultsTable resultsDist = distances.getResultsTableOnlyColoc();
+        resultsDist.show("Results");
+        new WaitForUserDialog(Kir_thMethod).show();
         synapPop.getObjects3DInt().stream().forEach(obj1 -> {
             int nbKir = 0;
             DescriptiveStatistics kirDistStats = new DescriptiveStatistics();
